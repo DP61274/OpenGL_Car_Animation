@@ -1,23 +1,27 @@
+// Compile the program : g++ cars.cpp -o cars -lGL -lGLU -lglut
+// Run the executable  : ./cars
+
 #include <GL/glut.h>
 #include <cmath>
 
 float carX = -1.0f;  // Car starts from the left
-float pedestrianY = -0.5f;  // Pedestrian starts at the bottom edge of the road
+float pedestrianY = -0.5f;
 bool pedestrianMoving = true;
 int lightState = 0;  // 0 = Red, 1 = Yellow, 2 = Green
-bool collisionOccurred = false; // Track collision
-bool pedestrianBlink  = false; // To make pedestrian blink
+bool collisionOccurred = false;
+bool pedestrianBlink  = false;
+bool showAccidentText = false;
 
 //Function to Render Text
 void renderText(float x, float y, const char* text) {
-    glColor3f(0.0f, 0.0f, 0.0f); // Set text color (black)
+    glColor3f(0.0f, 0.0f, 0.0f); // (black)
     glRasterPos2f(x, y); // Position the text
-
+    
     // Loop through each character and draw it
     for (const char* c = text; *c != '\0'; c++) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
     }
-}
+    }
 
 // Function to draw the road
 void drawRoad() {
@@ -36,19 +40,19 @@ void drawRoad() {
         glVertex2f(1.0f, -0.25f);
     glEnd();
     
-    // Draw pedestrian crossing (black and white stripes only under pedestrian width)
-    float shiftX = 0.5f; // Move the crossing to the right
-    
+    // Draw pedestrian crossing
+       float shiftX = 0.5f;
+
     for (float i = -0.5f; i <= 0.0f; i += 0.05f) {
         glColor3f((int(i * 20) % 2 == 0) ? 0.0f : 1.0f, 
                   (int(i * 20) % 2 == 0) ? 0.0f : 1.0f, 
                   (int(i * 20) % 2 == 0) ? 0.0f : 1.0f);
     
         glBegin(GL_QUADS);
-            glVertex2f(0.1f + shiftX, i);        // Left-bottom
-            glVertex2f(0.4f + shiftX, i);         // Right-bottom
-            glVertex2f(0.4f + shiftX, i + 0.05f); // Right-top
-            glVertex2f(0.1f + shiftX, i + 0.05f);// Left-top
+            glVertex2f(0.1f + shiftX, i);        
+            glVertex2f(0.4f + shiftX, i);        
+            glVertex2f(0.4f + shiftX, i + 0.05f);
+            glVertex2f(0.1f + shiftX, i + 0.05f);
         glEnd();
     }
 }
@@ -109,30 +113,34 @@ void drawPedestrian() {
 
 // Function to detect collision
 bool checkCollision() {
-    float carLeft = carX - 0.15f;  // Left boundary of car
-    float carRight = carX + 0.15f; // Right boundary of car
-    float pedestrianLeft = 0.74f;  // Left boundary of pedestrian
-    float pedestrianRight = 0.8f;  // Right boundary of pedestrian
+    //car boundaries
+    float carLeft = carX - 0.15f;  
+    float carRight = carX + 0.15f;
+    //pedestrian boundaries 
+    float pedestrianLeft = 0.74f;  
+    float pedestrianRight = 0.8f;
 
-    bool xOverlap = (carRight >= pedestrianLeft && carLeft <= pedestrianRight); // X-axis overlap
-    bool yOverlap = (pedestrianY >= -0.15f && pedestrianY <= -0.05f); // Y-axis overlap
+    bool xOverlap = (carRight >= pedestrianLeft && carLeft <= pedestrianRight); 
+    bool yOverlap = (pedestrianY >= -0.15f && pedestrianY <= -0.05f);
 
-    return xOverlap && yOverlap;  // True if both X and Y overlap
+    return xOverlap && yOverlap;
 }
 
+//Blinking effect
 void pedestrianBlinkEffect(int value) {
     if (collisionOccurred) {
-        pedestrianBlink = !pedestrianBlink;  // Toggle blinking
-        glutPostRedisplay();  // Force redraw to reflect changes
-        glutTimerFunc(300, pedestrianBlinkEffect, 0); // Blink every 300ms
+        pedestrianBlink = !pedestrianBlink; 
+        showAccidentText = pedestrianBlink;
+        glutPostRedisplay();
+        glutTimerFunc(300, pedestrianBlinkEffect, 0);
     }
 }
 
 
 // Function to draw the car
 void drawCar() {
-    glColor3f(0.4f, 0.6f, 0.9f);  // Light blue truck body
-    glBegin(GL_QUADS);
+    glColor3f(0.4f, 0.6f, 0.9f);
+        glBegin(GL_QUADS);
         glVertex2f(carX - 0.15f, -0.15f);
         glVertex2f(carX + 0.15f, -0.15f);
         glVertex2f(carX + 0.15f, -0.05f);
@@ -165,11 +173,11 @@ void drawTrafficLight() {
     // Traffic light pole
     glColor3f(0.3f, 0.3f, 0.3f);
     glBegin(GL_QUADS);
-        glVertex2f(0.35f, 0.9f);   // Move right
-        glVertex2f(0.4f, 0.9f);    // Move right
-        glVertex2f(0.4f, 0.0f);   // Move right
-        glVertex2f(0.35f, 0.0f);  // Move right
-    glEnd();
+        glVertex2f(0.35f, 0.9f); 
+        glVertex2f(0.4f, 0.9f);  
+        glVertex2f(0.4f, 0.0f);  
+        glVertex2f(0.35f, 0.0f); 
+        glEnd();
 
     // Traffic light box
     glColor3f(0.1f, 0.1f, 0.1f);
@@ -179,9 +187,9 @@ void drawTrafficLight() {
         glVertex2f(0.45f, 0.5f);
         glVertex2f(0.3f, 0.5f);
     glEnd();
-
-    float brightRed = (lightState == 0) ? 1.0f : 0.3f;      // Active = bright, Inactive = dim
-    float brightYellow = (lightState == 1) ? 0.8f : 0.3f;  // Yellow light slightly dimmer
+         // Active = bright, Inactive = dim
+    float brightRed = (lightState == 0) ? 1.0f : 0.3f;      
+    float brightYellow = (lightState == 1) ? 0.8f : 0.3f;
     float brightGreen = (lightState == 2) ? 1.0f : 0.3f;
 
     // Red Light
@@ -227,27 +235,41 @@ void display() {
     drawPedestrian();
 
     // Display control instructions
-    renderText(-0.9f, 0.9f, "Controls: ");
+    renderText(-0.9f, 0.9f, "Controls:");
     renderText(-0.9f, 0.85f, "[Arrow Keys] Move Car");
     renderText(-0.9f, 0.8f, "[SPACE] Restart");
     renderText(-0.9f, 0.75f, "[ESC] Exit");
 
+    // Show "Accident" message if collision occurs and blinking effect is ON
+    if (collisionOccurred && showAccidentText) {
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glRasterPos2f(-0.1f, 0.4f); 
+        const char* message = "ACCIDENT!";
+        for (const char* c = message; *c != '\0'; c++) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        }
+    }
+
     glutSwapBuffers();
 }
+
 
 // Keyboard input function
 void handleKeys(unsigned char key, int x, int y) {
     switch (key) {
-        case 27: // Escape key
+        // Escape key
+        case 27: 
             exit(0);
             break;
+        // space key
         case ' ':
             carX = -1.0f;  // Reset car position
-            collisionOccurred = false;  // Allow movement again
-            pedestrianBlink = false;  // Stop blinking
+            collisionOccurred = false; 
+            pedestrianBlink = false; 
+            showAccidentText = false;
             pedestrianY = -0.5f; // Reset pedestrian
             
-            glutTimerFunc(500, pedestrianBlinkEffect, 0); // Restart blink timer
+            glutTimerFunc(500, pedestrianBlinkEffect, 0); 
             break;
         
     }
@@ -283,7 +305,8 @@ void update(int value) {
         if (!collisionOccurred) {  // Only trigger once
             collisionOccurred = true;
             pedestrianBlink = true;
-            glutTimerFunc(500, pedestrianBlinkEffect, 0); // Start blinking effect
+            showAccidentText = true; 
+            glutTimerFunc(500, pedestrianBlinkEffect, 0); 
         }
     }
     
@@ -319,8 +342,7 @@ int main(int argc, char** argv) {
 
     glutTimerFunc(50, update, 0);
     glutTimerFunc(3000, changeLight, 0);
-    glutTimerFunc(500, pedestrianBlinkEffect, 0); // Start blinking timer
-
+    glutTimerFunc(500, pedestrianBlinkEffect, 0); 
     glutMainLoop();
     return 0;
 }
